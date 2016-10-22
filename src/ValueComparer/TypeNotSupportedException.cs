@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 
 namespace ValueComparer
 {
-    public class Class1
+    public class TypeNotSupportedException : Exception
     {
-        public Class1()
-        {
-        }
+        public Type Type { get; set; }
     }
 }
