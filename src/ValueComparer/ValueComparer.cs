@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace ValueComparer
 {
@@ -22,6 +19,13 @@ namespace ValueComparer
             return Compare(object1, object2, DefaultDepth);
         }
 
+        /// <summary>
+        /// Compare the value of object1 with object2
+        /// </summary>
+        /// <param name="object1">Object 1</param>
+        /// <param name="object2">Object 2</param>
+        /// <param name="depth">Depth of object graph to compare. Required to accommodate cyclical dependencies.</param>
+        /// <returns>True if value is identical, False otherwise</returns>
         public static bool Compare(object object1, object object2, int depth)
         {
             if (depth < 1)
@@ -29,23 +33,28 @@ namespace ValueComparer
                 throw new ArgumentOutOfRangeException("depth", depth, "Depth must be greater than 0.");
             }
 
-            return CompareObject(object1, object2, depth, 0);
+            return Compare(object1, object2, depth, level: 0);
         }
 
-        private static bool CompareObject(object object1, object object2, int depth, int level)
+        private static bool Compare(object object1, object object2, int depth, int level)
         {
             if (level <= depth)
             {
-                // Nulls are equal
-                if (object1 == null && object2 == null)
+                // Nulls checks
+                if (object1 == null)
                 {
-                    return true;
+                    return object2 == null;
                 }
 
-                // Either object1 or object2 is null
-                if (object1 == null ^ object2 == null)
+                if (object2 == null)
                 {
                     return false;
+                }
+
+                // Same object
+                if (object.ReferenceEquals(object1, object2))
+                {
+                    return true;
                 }
 
                 Type type = object1.GetType();
@@ -62,16 +71,21 @@ namespace ValueComparer
                     return object.Equals(object1, object2);
                 }
 
+                if (typeof(IDictionary).IsAssignableFrom(type))
+                {
+                    return CompareDictionaries((IDictionary)object1, (IDictionary)object2);
+                }
+
                 // Compare collections
                 if (typeof(IEnumerable).IsAssignableFrom(type))
                 {
-                    return CollectionsAreaEqual((IEnumerable)object1, (IEnumerable)object2, depth, level);
+                    return CompareCollections((IEnumerable)object1, (IEnumerable)object2, depth, level);
                 }
 
                 // Compare classes
                 if (type.GetTypeInfo().IsClass)
                 {
-                    return CompareProperties(type, object1, object2, depth, level);
+                    return CompareClasses(type, object1, object2, depth, level);
                 }
 
                 throw new TypeNotSupportedException() { Type = type };
@@ -91,7 +105,7 @@ namespace ValueComparer
         /// <param name="depth"></param>
         /// <param name="level"></param>
         /// <returns></returns>
-        private static bool CompareProperties(Type type, object object1, object object2, int depth, int level)
+        private static bool CompareClasses(Type type, object object1, object object2, int depth, int level)
         {
             level++;
 
@@ -101,7 +115,32 @@ namespace ValueComparer
                 var value2 = propertyInfo.GetValue(object2);
 
                 // Recursively call CompareObject for the full object graph
-                if (!CompareObject(value1, value2, depth, level))
+                if (!Compare(value1, value2, depth, level))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Compares dictionaries
+        /// </summary>
+        /// <param name="dictionary1">Dictionary 1</param>
+        /// <param name="dictionary2">Dictionary 2</param>
+        /// <returns>True/False</returns>
+        private static bool CompareDictionaries(IDictionary dictionary1, IDictionary dictionary2)
+        {
+            if (dictionary1.Count != dictionary2.Count) // Require equal count.
+            {
+                return false;
+            }
+
+            // check keys are the same
+            foreach (object key in dictionary1.Keys)
+            {
+                if (!dictionary2.Contains(key) || !dictionary1[key].Equals(dictionary2[key]))
                 {
                     return false;
                 }
@@ -116,7 +155,7 @@ namespace ValueComparer
         /// <param name="collection1">Collection 1</param>
         /// <param name="collection2">Collection 2</param>
         /// <returns></returns>
-        private static bool CollectionsAreaEqual(IEnumerable collection1, IEnumerable collection2, int depth, int level)
+        private static bool CompareCollections(IEnumerable collection1, IEnumerable collection2, int depth, int level)
         {
             var enumerator1 = collection1.GetEnumerator();
             var enumerator2 = collection2.GetEnumerator();
@@ -125,7 +164,7 @@ namespace ValueComparer
             {
                 if (enumerator2.MoveNext())
                 {
-                    if (!CompareObject(enumerator1.Current, enumerator2.Current, depth, level))
+                    if (!Compare(enumerator1.Current, enumerator2.Current, depth, level))
                     {
                         return false;
                     }
