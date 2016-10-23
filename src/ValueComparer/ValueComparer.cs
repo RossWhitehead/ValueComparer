@@ -65,7 +65,7 @@ namespace ValueComparer
                 // Compare collections
                 if (typeof(IEnumerable).IsAssignableFrom(type))
                 {
-                    return CollectionsAreaEqual((IEnumerable)object1, (IEnumerable)object2);
+                    return CollectionsAreaEqual((IEnumerable)object1, (IEnumerable)object2, depth, level);
                 }
 
                 // Compare classes
@@ -82,6 +82,15 @@ namespace ValueComparer
             }
         }
 
+        /// <summary>
+        /// Iterate through the properties, and compare each
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="object1"></param>
+        /// <param name="object2"></param>
+        /// <param name="depth"></param>
+        /// <param name="level"></param>
+        /// <returns></returns>
         private static bool CompareProperties(Type type, object object1, object object2, int depth, int level)
         {
             level++;
@@ -107,9 +116,34 @@ namespace ValueComparer
         /// <param name="collection1">Collection 1</param>
         /// <param name="collection2">Collection 2</param>
         /// <returns></returns>
-        private static bool CollectionsAreaEqual(IEnumerable collection1, IEnumerable collection2)
+        private static bool CollectionsAreaEqual(IEnumerable collection1, IEnumerable collection2, int depth, int level)
         {
-            throw new NotImplementedException();
+            var enumerator1 = collection1.GetEnumerator();
+            var enumerator2 = collection2.GetEnumerator();
+
+            while (enumerator1.MoveNext())
+            {
+                if (enumerator2.MoveNext())
+                {
+                    if (!CompareObject(enumerator1.Current, enumerator2.Current, depth, level))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    // More items in collection 1
+                    return false;
+                }
+            }
+
+            if (enumerator2.MoveNext())
+            {
+                // More items in collection 2
+                return false;
+            }
+
+            return true;
         }
     }
 }
