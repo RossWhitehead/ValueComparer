@@ -39,8 +39,8 @@ namespace ValueComparer
                 },
                 new object[]
                 {
-                    new int[2] { 1, 2 },
-                    new int[3] { 1, 2, 3 },
+                    new string[2] { "one", "two" },
+                    new string[3] { "one", "two", "three" },
                     false
                 },
                 // The MemberData attribute needs DisableDiscoveryEnumeration = true for the following to work
@@ -50,10 +50,22 @@ namespace ValueComparer
                     new int[2, 2] { { 1, 2 }, { 3, 4 } },
                     true
                 },
-                 new object[]
+                new object[]
                 {
                     new int[2, 2] { { 1, 2 }, { 3, 4 } },
                     new int[2, 2] { { 1, 6 }, { 3, 4 } },
+                    false
+                },
+                new object[]
+                {
+                    new byte[2][] { new byte[2] { 1, 2 }, new byte[3] { 3, 4, 5 } },
+                    new byte[2][] { new byte[2] { 1, 2 }, new byte[3] { 3, 4, 5 } },
+                    true
+                },
+                new object[]
+                {
+                    new byte[2][] { new byte[2] { 1, 2 }, new byte[3] { 3, 4, 5 } },
+                    new byte[2][] { new byte[2] { 1, 2 }, new byte[3] { 3, 4, 6 } },
                     false
                 }
             };
