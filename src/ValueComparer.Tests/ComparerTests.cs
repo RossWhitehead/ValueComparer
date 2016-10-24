@@ -11,40 +11,38 @@ namespace ValueComparer
         [Theory]
         [InlineData(1, null)]
         [InlineData(null, 2)]
-        public void Compare_ReturnsFalse_WhenAtLeastOneObjectIsNull(object object1, object object2)
+        public void AssertEqual_ThrowsNotEqualException_WhenAtLeastOneObjectIsNull(object object1, object object2)
         {
-            // Act
-            var actualResult = ValueComparer.Compare(object1, object2);
-
             // Assert
-            Assert.Equal(false, actualResult);
+            Assert.Throws<EqualException>(() => ValueComparer.AssertEqual(object1, object2));
         }
 
         [Theory]
         [InlineData(1, 1.0)]
-        public void Compare_ReturnsFalse_WhenTypesOfObject1And2AreaNotEqual(object object1, object object2)
+        public void Compare_ThrowsNotEqualException_WhenTypesOfObject1And2AreaNotEqual(object object1, object object2)
         {
-            // Act
-            var actualResult = ValueComparer.Compare(object1, object2);
-
             // Assert
-            Assert.Equal(false, actualResult);
+            Assert.Throws<EqualException>(() => ValueComparer.AssertEqual(object1, object2));
         }
 
         [Theory]
         [InlineData(1, 1, true)]
         [InlineData(1, 2, false)]
-        public void Compare_ReturnsExpectedResult_ForIComparableTypes(object object1, object object2, bool expectedResult)
+        public void Compare_ExpectedResult_ForIComparableTypes(object object1, object object2, bool areEqual)
         {
-            // Act
-            var actualResult = ValueComparer.Compare(object1, object2);
-
             // Assert
-            Assert.Equal(expectedResult, actualResult);
+            if (areEqual)
+            {
+                ValueComparer.AssertEqual(object1, object2);
+            }
+            else
+            {
+                Assert.Throws<EqualException>(() => ValueComparer.AssertEqual(object1, object2));
+            }
         }
 
         [Fact]
-        public void Compare_ReturnsTrue_ForObjectsOfSameTypeAndValues()
+        public void Compare_ThrowsEqualException_ForNotEqualClasses()
         {
             // Arrange
             var fake1 = new Fake()
@@ -61,11 +59,8 @@ namespace ValueComparer
                 InnerFake = new Fake() { Prop1 = 2 }
             };
 
-            // Act
-            var actualResult = ValueComparer.Compare(fake1, fake2);
-
             // Assert
-            Assert.Equal(false, actualResult);
+            Assert.Throws<EqualException>(() => ValueComparer.AssertEqual(fake1, fake2));
         }
 
         private class Fake

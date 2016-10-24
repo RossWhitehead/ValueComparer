@@ -11,13 +11,17 @@ namespace ValueComparer
 
         [Theory]
         [MemberData(("CollectionsData"), DisableDiscoveryEnumeration = true)]
-        public void Compare_ReturnsExpectedResult_ForCollections(object object1, object object2, bool expectedResult)
+        public void Compare_ExpectedResult_ForCollections(object object1, object object2, bool areEqual)
         {
-            // Act
-            var actualResult = ValueComparer.Compare(object1, object2);
-
             // Assert
-            Assert.Equal(expectedResult, actualResult);
+            if (areEqual)
+            {
+                ValueComparer.AssertEqual(object1, object2);
+            }
+            else
+            {
+                Assert.Throws<EqualException>(() => ValueComparer.AssertEqual(object1, object2));
+            }
         }
 
         public static IEnumerable<object[]> CollectionsData()
