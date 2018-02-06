@@ -13,6 +13,8 @@ namespace ValueComparer
         /// </summary>
         /// <param name="object1">Object 1</param>
         /// <param name="object2">Object 2</param>
+        /// <exception cref="TypeNotSupportedException">Thrown when types cannot be compared</exception>
+        /// <exception cref="EqualException">Thrown when objects are not equal</exception>
         public static void AssertEqual(object object1, object object2)
         {
             AssertEqual(object1, object2, DefaultDepth);
@@ -24,6 +26,8 @@ namespace ValueComparer
         /// <param name="object1">Object 1</param>
         /// <param name="object2">Object 2</param>
         /// <param name="depth">Depth of object graph to compare. Required to accommodate cyclical dependencies.</param>
+        /// <exception cref="TypeNotSupportedException">Thrown when types cannot be compared</exception>
+        /// <exception cref="EqualException">Thrown when objects are not equal</exception>
         public static void AssertEqual(object object1, object object2, int depth)
         {
             if (depth < 1)
